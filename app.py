@@ -39,7 +39,6 @@ def logout():
     logout_user()
     return jsonify({"message": "Logout realizado com sucesso!"})
 
-
 @app.route('/user', methods=['POST'])
 def create_user():
     data = request.get_json()
@@ -47,7 +46,7 @@ def create_user():
     password = data.get("password")
     
     if username and password:
-        user = User(username=username, password=password)
+        user = User(username=username, password=password, role='user')
         db.session.add(user)
         db.session.commit()
         return jsonify({"message": "Usuário cadastrado com sucesso."}) 
@@ -60,16 +59,18 @@ def read_user(id_user):
     user = User.query.get(id_user)
     
     if user:
-        return {"username": user.username} 
+        return {"username": user.username, "role": user.role} 
     
     return jsonify({"message": "Usuário não encontrado"}), 404
-
 
 @app.route('/user/<int:id_user>', methods=['PUT'])
 @login_required
 def update_user(id_user):
     user = User.query.get(id_user)
     data = request.get_json()
+
+    if id_user != current_user.id and current_user.role == 'user':
+        return jsonify({"message": "Operação não permitida"}), 403
 
     if user and data.get("password"):
         user.password = data.get("password")
@@ -83,6 +84,8 @@ def update_user(id_user):
 def delete_user(id_user):
     user = User.query.get(id_user)
 
+    if current_user.role != 'admin':
+        return jsonify({"message": "Operação não permitida."}), 403
     if id_user == current_user.id:
         return jsonify({"message": "Deleção não permitida"}), 403
     if user:
@@ -91,6 +94,7 @@ def delete_user(id_user):
         return jsonify({"message": f"Usuário {id_user} deletado com sucesso."})
     
     return jsonify({"message": "Usuário não encontrado"}), 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)
