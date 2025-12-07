@@ -9,7 +9,8 @@ services:
       MYSQL_ROOT_PASSWORD: 'admin123'
     ports:
       - "3306:3306"
-    expose:
-      - "3306"
     volumes:
-      - /home/soaresmiltinho/Documents/projects/mysql:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
